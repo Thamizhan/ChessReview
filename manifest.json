@@ -1,0 +1,14 @@
+{
+  "name": "Review Room — chess game review",
+  "short_name": "Review Room",
+  "description": "Unlimited chess game review with engine analysis and a coach that explains every move.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#10151b",
+  "theme_color": "#10151b",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
