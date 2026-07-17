@@ -17,6 +17,39 @@
 </head>
 <body>
 
+<div id="boot-error" role="alert" hidden style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#4a1414;color:#ffd9d9;font:14px/1.5 -apple-system,sans-serif;padding:12px 16px;border-bottom:1px solid #8a2a2a;white-space:pre-wrap;"></div>
+<script>
+(function () {
+  var el = document.getElementById('boot-error');
+  function showBootError(msg) {
+    el.textContent = msg;
+    el.hidden = false;
+  }
+  window.__rrBootError = showBootError;
+
+  if (location.protocol === 'file:') {
+    var msg = 'Review Room can\'t run when opened directly from disk (file://). ES modules and the Stockfish worker are blocked by the browser under file://.\n' +
+      'Serve this folder over HTTP instead, e.g.: python3 -m http.server 8080  — then open http://localhost:8080';
+    console.error('[Review Room] ' + msg);
+    showBootError(msg);
+  }
+
+  window.addEventListener('error', function (e) {
+    if (location.protocol === 'file:') return; // already explained above
+    var detail = e.message || (e.error && e.error.message) || 'unknown error';
+    var where = e.filename ? (' (' + e.filename + (e.lineno ? ':' + e.lineno : '') + ')') : '';
+    console.error('[Review Room] Uncaught error' + where + ':', e.error || e.message);
+    showBootError('Something failed to load: ' + detail + '.\nOpen the browser console for details.');
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    if (location.protocol === 'file:') return;
+    var detail = (e.reason && (e.reason.message || String(e.reason))) || 'unknown error';
+    console.error('[Review Room] Unhandled promise rejection:', e.reason);
+    showBootError('Something failed to load: ' + detail + '.\nOpen the browser console for details.');
+  });
+})();
+</script>
+
 <!-- ═══════════ LIBRARY SCREEN ═══════════ -->
 <section id="screen-library" class="screen active">
   <header class="lib-header">

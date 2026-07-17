@@ -100,7 +100,7 @@ let engine = null, engineReady = null;
 function getEngine() {
   if (engine) return engineReady;
   engine = new Worker('vendor/stockfish.js');
-  engineReady = new Promise(res => {
+  engineReady = new Promise((res, rej) => {
     const onMsg = (e) => {
       if (String(e.data).includes('uciok')) {
         engine.postMessage('setoption name MultiPV value 2');
@@ -109,6 +109,12 @@ function getEngine() {
       }
     };
     engine.addEventListener('message', onMsg);
+    engine.addEventListener('error', (e) => {
+      const msg = 'Stockfish engine failed to load: ' + (e.message || 'unknown worker error') + '.\nCheck that vendor/stockfish.js and vendor/stockfish.wasm are being served (not opened via file://).';
+      console.error('[Review Room] ' + msg, e);
+      window.__rrBootError?.(msg);
+      rej(new Error(msg));
+    });
     engine.postMessage('uci');
   });
   return engineReady;
@@ -156,7 +162,12 @@ async function analyseGame(g) {
 
   $('analyze-overlay').hidden = false;
   cancelAnalysis = false;
-  await getEngine();
+  try {
+    await getEngine();
+  } catch (err) {
+    $('analyze-overlay').hidden = true;
+    return null;
+  }
 
   const c = new Chess();
   const fens = [c.fen()];
@@ -711,4 +722,10 @@ function wire() {
     else if (e.key.toLowerCase() === 'g') { $('chk-retry').checked = !$('chk-retry').checked; cur.retry = $('chk-retry').checked; }
   });
 }
-wire();
+try {
+  wire();
+} catch (err) {
+  const msg = 'Review Room failed to start: ' + err.message + '.\nOpen the browser console for details.';
+  console.error('[Review Room] ' + msg, err);
+  window.__rrBootError?.(msg);
+}
