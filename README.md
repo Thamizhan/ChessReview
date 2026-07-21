@@ -63,3 +63,7 @@ If a provider blocks browser calls, use OpenRouter or a small proxy.
 ## Privacy
 
 Games, analysis, settings, and API keys never leave the device except the AI calls you explicitly trigger, which go directly from your browser to your chosen provider.
+
+## Credits
+
+Chess piece set: **icpieces** by sadsnake1, from the [Lichess](https://lichess.org) open-source piece collection ([lila](https://github.com/lichess-org/lila/tree/master/public/piece/icpieces)), licensed [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).

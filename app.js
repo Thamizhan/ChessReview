@@ -279,8 +279,7 @@ function pieceName(sym) { return { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook
 function coachFor(g, an, cls, i) {
   const mv = g.moves[i], before = an.pos[i], after = an.pos[i + 1], c = cls[i];
   const you = youSide(g) === mv.color;
-  const who = you ? 'You' : (mv.color === 'w' ? g.headers.White : g.headers.Black);
-  const yourMove = you ? 'your move' : `${who}'s move`;
+  const who = you ? 'You' : 'Your opponent';
   const bestSan = before.best ? uciSan(before.fen, before.best) : null;
   const line = before.pv?.length ? pvToSan(before.fen, before.pv, 6).join(' ') : '';
   const V = c.verdict;
@@ -298,7 +297,7 @@ function coachFor(g, an, cls, i) {
   // What went wrong
   const bits = [];
   if (c.mateAgainstAfter) bits.push(`after ${mv.san}, the opponent has a forced checkmate in ${Math.abs(after.mate)}`);
-  if (c.verdict === 'miss') bits.push(`${who === 'You' ? 'you' : who} had a forced checkmate available and let it slip`);
+  if (c.verdict === 'miss') bits.push(`${you ? 'you' : 'your opponent'} had a forced checkmate available and let it slip`);
 
   // does the engine's reply win material?
   const reply = after.best;
@@ -320,7 +319,7 @@ function coachFor(g, an, cls, i) {
 
   const sev = V === 'blunder' ? 'This one really hurts.' : V === 'mistake' ? 'A real slip.' : 'A small step in the wrong direction.';
   const why = bits.length ? capitalize(bits.join('; ')) + '.' : "It wasn't the strongest continuation here — it let some of the advantage slip away.";
-  const instead = bestSan ? ` Instead, ${bestSan} keeps ${you ? 'you' : who} on track.` : '';
+  const instead = bestSan ? ` Instead, ${bestSan} keeps ${you ? 'you' : 'your opponent'} on track.` : '';
   const habit = you && (V === 'blunder' || V === 'mistake')
     ? ' Before every move, ask: what is the opponent\'s best check, capture, or threat in reply?' : '';
   return { text: `${sev} ${why}${instead}${habit}`, line };
@@ -487,7 +486,7 @@ function speak(text) {
 function populateVoiceOptions() {
   if (!('speechSynthesis' in window)) return;
   const sel = $('set-voice');
-  const voices = speechSynthesis.getVoices();
+  const voices = speechSynthesis.getVoices().filter(v => v.lang?.toLowerCase().startsWith('en'));
   if (!voices.length) return;
   const current = sel.value || settings.voiceURI;
   sel.innerHTML = '<option value="">Browser default</option>' + voices
@@ -521,7 +520,7 @@ function renderCoach() {
   }
   const i = ply - 1, v = cls[i].verdict, mv = g.moves[i];
   const you = youSide(g) === mv.color;
-  const whoName = you ? 'You' : (mv.color === 'w' ? g.headers.White : g.headers.Black);
+  const whoName = you ? 'You' : 'Opponent';
   chip.textContent = VERDICTS[v].label;
   chip.style.background = VERDICTS[v].color; chip.style.color = '#10151b';
   mvEl.innerHTML = `<span class="whose ${you ? 'you' : 'opp'}">${esc(whoName)}</span> · ${Math.floor(i / 2) + 1}${mv.color === 'w' ? '.' : '…'} ${esc(mv.san)}  ·  ${evalText(an.pos[i + 1])}`;
@@ -532,7 +531,7 @@ function renderCoach() {
     lineEl.textContent = 'Better line: ' + coach.line;
   } else lineEl.hidden = true;
   $('btn-ai-explain').hidden = !['inaccuracy', 'mistake', 'blunder', 'miss', 'brilliant', 'great'].includes(v);
-  speak((you ? 'Your move. ' : `${whoName}'s move. `) + txt.textContent);
+  speak((you ? 'Your move. ' : 'Opponent\'s move. ') + txt.textContent);
 }
 
 /* ═══════════════ navigation & retry ═══════════════ */
