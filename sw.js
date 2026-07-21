@@ -1,4 +1,4 @@
-const CACHE = 'review-room-v2';
+const CACHE = 'review-room-v5';
 const ASSETS = [
   './', 'index.html', 'style.css', 'app.js', 'manifest.json',
   'vendor/chess.mjs', 'vendor/stockfish.js', 'vendor/stockfish.wasm', 'vendor/stockfish.asm.js',

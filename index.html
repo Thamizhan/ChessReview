@@ -60,7 +60,7 @@
         <p class="tagline">Unlimited game review. Your coach, on call.</p>
       </div>
     </div>
-    <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings">⚙</button>
+    <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" stroke-dasharray="2.4 3.2"/></svg></button>
   </header>
 
   <div class="uploader" id="drop-zone">
@@ -95,12 +95,12 @@
 <!-- ═══════════ REVIEW SCREEN ═══════════ -->
 <section id="screen-review" class="screen">
   <header class="rev-header">
-    <button class="icon-btn" id="btn-back" aria-label="Back to games">←</button>
+    <button class="icon-btn" id="btn-back" aria-label="Back to games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></button>
     <div class="rev-title">
       <span id="rev-players">—</span>
       <span id="rev-sub" class="rev-sub">—</span>
     </div>
-    <button class="icon-btn" id="btn-flip" aria-label="Flip board" title="Flip board (F)">⇅</button>
+    <button class="icon-btn" id="btn-flip" aria-label="Flip board" title="Flip board (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v14m0 0-3-3m3 3 3-3"/><path d="M17 21V7m0 0-3 3m3-3 3 3"/></svg></button>
   </header>
 
   <div class="rev-grid">
@@ -123,10 +123,10 @@
       </div>
 
       <div class="nav-bar">
-        <button class="nav-btn" id="nav-start" aria-label="Start">⏮</button>
-        <button class="nav-btn" id="nav-prev" aria-label="Previous move">◀</button>
-        <button class="nav-btn big" id="nav-next" aria-label="Next move">▶</button>
-        <button class="nav-btn" id="nav-end" aria-label="End">⏭</button>
+        <button class="nav-btn" id="nav-start" aria-label="Start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5v14"/><path d="M19 6 9 12l10 6V6z"/></svg></button>
+        <button class="nav-btn" id="nav-prev" aria-label="Previous move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6 8.5 12l6 6"/></svg></button>
+        <button class="nav-btn big" id="nav-next" aria-label="Next move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6"/></svg></button>
+        <button class="nav-btn" id="nav-end" aria-label="End"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5v14"/><path d="M5 6l10 6L5 18V6z"/></svg></button>
         <label class="toggle"><input type="checkbox" id="chk-retry"><span>Guess mode</span></label>
         <label class="toggle"><input type="checkbox" id="chk-arrow" checked><span>Best arrow</span></label>
       </div>
@@ -137,6 +137,7 @@
         <div class="coach-head">
           <span class="verdict-chip" id="verdict-chip">—</span>
           <span class="coach-move" id="coach-move"></span>
+          <button class="icon-btn small push-right" id="btn-speak" aria-label="Read hint aloud" title="Read hint aloud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5.5a9 9 0 0 1 0 13"/></svg></button>
         </div>
         <p class="coach-text" id="coach-text">Pick a game to begin.</p>
         <div class="coach-line" id="coach-line" hidden></div>
@@ -168,7 +169,7 @@
 <!-- ═══════════ SETTINGS MODAL ═══════════ -->
 <div class="modal" id="settings-modal" hidden>
   <div class="modal-box">
-    <div class="modal-head"><h2>Settings</h2><button class="icon-btn" id="btn-settings-close" aria-label="Close">✕</button></div>
+    <div class="modal-head"><h2>Settings</h2><button class="icon-btn" id="btn-settings-close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
 
     <label class="field">Your chess.com username
       <input type="text" id="set-username" placeholder="ThamizhanST">
@@ -181,6 +182,11 @@
         <option value="12" selected>Balanced — depth 12 (~1 min)</option>
         <option value="14">Deep — depth 14 (~2–3 min)</option>
       </select>
+    </label>
+
+    <label class="field">Coach voice
+      <select id="set-voice"><option value="">Browser default</option></select>
+      <span class="hint">Picks the voice used to read hints aloud. Changing it plays a quick sample.</span>
     </label>
 
     <h3 class="modal-sub">AI coach (optional)</h3>

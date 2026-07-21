@@ -4,7 +4,7 @@ import { Chess } from './vendor/chess.mjs';
 const DEFAULTS = {
   username: 'ThamizhanST', depth: 12,
   provider: 'anthropic', model: 'claude-sonnet-4-6', baseurl: '',
-  keys: {},
+  keys: {}, voiceURI: '',
 };
 const MODEL_DEFAULTS = {
   anthropic: 'claude-sonnet-4-6', openai: 'gpt-4o-mini',
@@ -286,13 +286,13 @@ function coachFor(g, an, cls, i) {
   const V = c.verdict;
 
   if (['brilliant', 'great', 'best'].includes(V)) {
-    const praise = V === 'brilliant' ? `${who} found a brilliant idea — giving up material for a bigger gain. Exactly the engine's top choice.`
+    const praise = V === 'brilliant' ? `${who} found a brilliant idea — giving up material for a bigger gain that pays off. The strongest move on the board.`
       : V === 'great' ? `${who} found the only strong move here; everything else loses ground.`
-        : `${bestSan || mv.san} was the engine's first choice. ${you ? 'Well spotted.' : ''}`;
+        : `${bestSan || mv.san} was the strongest move here. ${you ? 'Well spotted.' : ''}`;
     return { text: praise, line };
   }
   if (V === 'excellent' || V === 'good') {
-    return { text: `${mv.san} is a solid, healthy move. ${bestSan && bestSan !== mv.san ? `The engine slightly prefers ${bestSan}, but the difference is small.` : ''}`, line };
+    return { text: `${mv.san} is a solid, healthy move. ${bestSan && bestSan !== mv.san ? `${bestSan} was a touch stronger, but it's a close call.` : ''}`, line };
   }
 
   // What went wrong
@@ -319,7 +319,7 @@ function coachFor(g, an, cls, i) {
   }
 
   const sev = V === 'blunder' ? 'This one really hurts.' : V === 'mistake' ? 'A real slip.' : 'A small step in the wrong direction.';
-  const why = bits.length ? capitalize(bits.join('; ')) + '.' : `The evaluation swung from ${evalText(before)} to ${evalText(after)}.`;
+  const why = bits.length ? capitalize(bits.join('; ')) + '.' : "It wasn't the strongest continuation here — it let some of the advantage slip away.";
   const instead = bestSan ? ` Instead, ${bestSan} keeps ${you ? 'you' : who} on track.` : '';
   const habit = you && (V === 'blunder' || V === 'mistake')
     ? ' Before every move, ask: what is the opponent\'s best check, capture, or threat in reply?' : '';
@@ -449,10 +449,11 @@ function renderArrow() {
   const svg = $('arrow-layer');
   svg.innerHTML = '';
   if (!$('chk-arrow').checked) return;
-  const p = cur.an.pos[cur.ply];
-  if (!p || !p.best || cur.ply >= cur.fens.length - 1 && !p.best) return;
   if (cur.retryArmed) return; // don't spoil the guess
-  if (!p.best) return;
+  // Retrospective: show the suggestion for the move that was just played (ply-1),
+  // not the forward-looking suggestion for whoever moves next — those are opposite sides.
+  const p = cur.an.pos[Math.max(0, cur.ply - 1)];
+  if (!p || !p.best) return;
   const [x1, y1] = sqCenter(p.best.slice(0, 2));
   const [x2, y2] = sqCenter(p.best.slice(2, 4));
   const ang = Math.atan2(y2 - y1, x2 - x1);
@@ -469,6 +470,33 @@ function renderEval() {
   $('eval-num').textContent = p.mate !== null ? 'M' + Math.abs(p.mate) : Math.abs(p.cp / 100).toFixed(1);
 }
 
+/* ═══════════════ voice coaching ═══════════════ */
+function speak(text) {
+  if (!('speechSynthesis' in window) || !text) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  if (settings.voiceURI) {
+    const v = speechSynthesis.getVoices().find(v => v.voiceURI === settings.voiceURI);
+    if (v) u.voice = v;
+  }
+  const btn = $('btn-speak');
+  u.onstart = () => btn?.classList.add('speaking');
+  u.onend = u.onerror = () => btn?.classList.remove('speaking');
+  speechSynthesis.speak(u);
+}
+function populateVoiceOptions() {
+  if (!('speechSynthesis' in window)) return;
+  const sel = $('set-voice');
+  const voices = speechSynthesis.getVoices();
+  if (!voices.length) return;
+  const current = sel.value || settings.voiceURI;
+  sel.innerHTML = '<option value="">Browser default</option>' + voices
+    .map(v => `<option value="${esc(v.voiceURI)}">${esc(v.name)} (${esc(v.lang)})</option>`)
+    .join('');
+  sel.value = voices.some(v => v.voiceURI === current) ? current : '';
+}
+if ('speechSynthesis' in window) speechSynthesis.addEventListener('voiceschanged', populateVoiceOptions);
+
 /* ═══════════════ coach panel ═══════════════ */
 function renderCoach() {
   const { ply, g, an, cls } = cur;
@@ -479,6 +507,7 @@ function renderCoach() {
     mvEl.textContent = '';
     txt.textContent = 'In the game, a weaker move was played here. Move a piece on the board — can you find the coach\'s choice?';
     lineEl.hidden = true; $('btn-ai-explain').hidden = true;
+    speak(txt.textContent);
     return;
   }
   if (ply === 0) {
@@ -487,12 +516,15 @@ function renderCoach() {
     const side = youSide(g);
     txt.textContent = side ? `You played ${side === 'w' ? 'White' : 'Black'}. Step through with ▶ or the arrow keys — I'll comment on every move, both sides.` : 'Step through with ▶ or the arrow keys.';
     lineEl.hidden = true; $('btn-ai-explain').hidden = true;
+    speak(txt.textContent);
     return;
   }
   const i = ply - 1, v = cls[i].verdict, mv = g.moves[i];
+  const you = youSide(g) === mv.color;
+  const whoName = you ? 'You' : (mv.color === 'w' ? g.headers.White : g.headers.Black);
   chip.textContent = VERDICTS[v].label;
   chip.style.background = VERDICTS[v].color; chip.style.color = '#10151b';
-  mvEl.textContent = `${Math.floor(i / 2) + 1}${mv.color === 'w' ? '.' : '…'} ${mv.san}  ·  ${evalText(an.pos[i + 1])}`;
+  mvEl.innerHTML = `<span class="whose ${you ? 'you' : 'opp'}">${esc(whoName)}</span> · ${Math.floor(i / 2) + 1}${mv.color === 'w' ? '.' : '…'} ${esc(mv.san)}  ·  ${evalText(an.pos[i + 1])}`;
   const coach = coachFor(g, an, cls, i);
   txt.textContent = coach.text;
   if (coach.line && ['inaccuracy', 'mistake', 'blunder', 'miss'].includes(v)) {
@@ -500,6 +532,7 @@ function renderCoach() {
     lineEl.textContent = 'Better line: ' + coach.line;
   } else lineEl.hidden = true;
   $('btn-ai-explain').hidden = !['inaccuracy', 'mistake', 'blunder', 'miss', 'brilliant', 'great'].includes(v);
+  speak((you ? 'Your move. ' : `${whoName}'s move. `) + txt.textContent);
 }
 
 /* ═══════════════ navigation & retry ═══════════════ */
@@ -575,6 +608,7 @@ function evaluateGuess(legal) {
     txt.textContent = `${legal.san} isn't it either. The coach's choice was ${bestSan}. Press ▶ to see the game move.`;
   }
   $('coach-line').hidden = true; $('btn-ai-explain').hidden = true;
+  speak(txt.textContent);
 }
 
 /* ═══════════════ AI explain ═══════════════ */
@@ -650,6 +684,8 @@ function showScreen(name) {
 function openSettings() {
   $('set-username').value = settings.username;
   $('set-depth').value = String(settings.depth);
+  populateVoiceOptions();
+  $('set-voice').value = settings.voiceURI || '';
   $('set-provider').value = settings.provider;
   $('set-model').value = settings.model;
   $('set-baseurl').value = settings.baseurl;
@@ -681,7 +717,7 @@ function wire() {
     loadPgnText($('pgn-text').value); $('paste-box').hidden = true;
   });
 
-  $('btn-back').addEventListener('click', () => { showScreen('library'); });
+  $('btn-back').addEventListener('click', () => { if ('speechSynthesis' in window) speechSynthesis.cancel(); showScreen('library'); });
   $('btn-flip').addEventListener('click', () => { if (cur) { cur.orient = cur.orient === 'w' ? 'b' : 'w'; renderBoard(); renderPlayers(); } });
   $('nav-start').addEventListener('click', () => goTo(0));
   $('nav-prev').addEventListener('click', () => goTo(cur.ply - 1));
@@ -689,11 +725,21 @@ function wire() {
   $('nav-end').addEventListener('click', () => goTo(cur.fens.length - 1));
   $('chk-retry').addEventListener('change', (e) => { if (cur) cur.retry = e.target.checked; });
   $('chk-arrow').addEventListener('change', () => cur && renderArrow());
+  $('btn-speak').addEventListener('click', () => {
+    if ('speechSynthesis' in window && speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
+    speak($('coach-text').textContent);
+  });
   $('btn-ai-explain').addEventListener('click', aiExplain);
   $('btn-cancel-analysis').addEventListener('click', () => { cancelAnalysis = true; });
 
   $('btn-settings').addEventListener('click', openSettings);
   $('btn-settings-close').addEventListener('click', () => { $('settings-modal').hidden = true; });
+  $('set-voice').addEventListener('change', (e) => {
+    const prevVoiceURI = settings.voiceURI;
+    settings.voiceURI = e.target.value;
+    speak('This is how I\'ll sound when I read out your hints.');
+    settings.voiceURI = prevVoiceURI; // only persisted on Save
+  });
   $('set-provider').addEventListener('change', (e) => {
     $('set-model').value = MODEL_DEFAULTS[e.target.value] || '';
     $('set-apikey').value = settings.keys[e.target.value] || '';
@@ -702,6 +748,7 @@ function wire() {
   $('btn-settings-save').addEventListener('click', () => {
     settings.username = $('set-username').value.trim();
     settings.depth = +$('set-depth').value;
+    settings.voiceURI = $('set-voice').value;
     settings.provider = $('set-provider').value;
     settings.model = $('set-model').value.trim();
     settings.baseurl = $('set-baseurl').value.trim();
