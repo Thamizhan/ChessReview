@@ -217,7 +217,7 @@
   </div>
 </div>
 
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js" onerror="window.__rrBootError && window.__rrBootError('app.js (or one of its imports, e.g. vendor/chess.mjs) failed to load — check that every file was actually deployed, including the vendor/ folder.\nOpen the browser console and Network tab for the exact 404.')"></script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
