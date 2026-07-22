@@ -132,28 +132,26 @@
       </div>
     </div>
 
-    <div class="side-col">
-      <div class="coach-card" id="coach-card">
-        <div class="coach-head">
-          <span class="verdict-chip" id="verdict-chip">—</span>
-          <span class="coach-move" id="coach-move"></span>
-          <button class="icon-btn small push-right" id="btn-speak" aria-label="Read hint aloud" title="Read hint aloud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5.5a9 9 0 0 1 0 13"/></svg></button>
-        </div>
-        <p class="coach-text" id="coach-text">Pick a game to begin.</p>
-        <div class="coach-line" id="coach-line" hidden></div>
-        <div class="coach-actions">
-          <button class="btn small" id="btn-ai-explain" hidden>Ask coach (AI)</button>
-        </div>
-        <div class="ai-answer" id="ai-answer" hidden></div>
+    <div class="coach-card" id="coach-card">
+      <div class="coach-head">
+        <span class="verdict-chip" id="verdict-chip">—</span>
+        <span class="coach-move" id="coach-move"></span>
+        <button class="icon-btn small push-right" id="btn-speak" aria-label="Read hint aloud" title="Read hint aloud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5.5a9 9 0 0 1 0 13"/></svg></button>
       </div>
-
-      <div class="summary-card" id="summary-card" hidden>
-        <h3>Game summary</h3>
-        <div id="summary-body"></div>
+      <p class="coach-text" id="coach-text">Pick a game to begin.</p>
+      <div class="coach-line" id="coach-line" hidden></div>
+      <div class="coach-actions">
+        <button class="btn small" id="btn-ai-explain" hidden>Ask coach (AI)</button>
       </div>
-
-      <ol id="move-list" class="move-list" aria-label="Move list"></ol>
+      <div class="ai-answer" id="ai-answer" hidden></div>
     </div>
+
+    <div class="summary-card" id="summary-card" hidden>
+      <h3>Game summary</h3>
+      <div id="summary-body"></div>
+    </div>
+
+    <ol id="move-list" class="move-list" aria-label="Move list"></ol>
   </div>
 
   <div class="analyze-overlay" id="analyze-overlay" hidden>
@@ -172,8 +170,8 @@
     <div class="modal-head"><h2>Settings</h2><button class="icon-btn" id="btn-settings-close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
 
     <label class="field">Your chess.com username
-      <input type="text" id="set-username" placeholder="ThamizhanST">
-      <span class="hint">Used to mark your side, flip the board, and tag wins and losses.</span>
+      <input type="text" id="set-username" placeholder="e.g. MagnusCarlsen">
+      <span class="hint" id="username-hint">Used to mark your side, flip the board, and tag wins and losses.</span>
     </label>
 
     <label class="field">Engine depth

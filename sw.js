@@ -1,4 +1,6 @@
-const CACHE = 'review-room-v8';
+const CACHE = 'review-room-v9';
+const SHARE_CACHE = 'review-room-share-inbox';
+const SHARE_KEY = './__shared-pgn__';
 const ASSETS = [
   './', 'index.html', 'style.css', 'app.js', 'manifest.json',
   'vendor/chess.mjs', 'vendor/stockfish.js', 'vendor/stockfish.wasm', 'vendor/stockfish.asm.js',
@@ -17,9 +19,24 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return; // AI/font calls go straight to network
+  if (e.request.method === 'POST' && url.pathname.endsWith('/share-target/')) {
+    e.respondWith(handleShare(e.request));
+    return;
+  }
   e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request).then(r => {
     const copy = r.clone();
     caches.open(CACHE).then(c => c.put(e.request, copy));
     return r;
   })));
 });
+async function handleShare(request) {
+  let text = '';
+  try {
+    const formData = await request.formData();
+    const file = formData.get('pgn');
+    if (file) text = await file.text();
+  } catch (err) { /* fall through with empty text */ }
+  const cache = await caches.open(SHARE_CACHE);
+  await cache.put(SHARE_KEY, new Response(text, { headers: { 'content-type': 'text/plain' } }));
+  return Response.redirect('./?shared=1', 303);
+}

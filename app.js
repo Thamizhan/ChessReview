@@ -2,7 +2,7 @@ import { Chess } from './vendor/chess.mjs';
 
 /* ═══════════════ settings ═══════════════ */
 const DEFAULTS = {
-  username: 'ThamizhanST', depth: 12,
+  username: '', depth: 12,
   provider: 'anthropic', model: 'claude-sonnet-4-6', baseurl: '',
   keys: {}, voiceURI: '',
 };
@@ -18,7 +18,15 @@ function loadSettings() {
 function saveSettings() { localStorage.setItem('rr_settings', JSON.stringify(settings)); }
 
 /* ═══════════════ state ═══════════════ */
-let games = [];            // parsed games
+function loadLibrary() {
+  try { return JSON.parse(localStorage.getItem('rr_library')) || []; }
+  catch { return []; }
+}
+function saveLibrary() {
+  try { localStorage.setItem('rr_library', JSON.stringify(games)); }
+  catch (e) { console.warn('Could not save game library (storage full?):', e.message); }
+}
+let games = loadLibrary();   // persisted game library, newest first
 let cur = null;            // current review session
 const $ = (id) => document.getElementById(id);
 
@@ -90,8 +98,14 @@ function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;'
 function loadPgnText(text) {
   const parsed = parseGames(text);
   if (!parsed.length) { alert('No valid games found in that PGN.'); return; }
-  games = parsed;
+  const existingHashes = new Set(games.map(g => g.hash));
+  const newGames = parsed.filter(g => !existingHashes.has(g.hash));
+  if (newGames.length) { games = [...newGames, ...games]; saveLibrary(); }
   renderLibrary();
+  if (parsed.length === 1) {
+    openGame(games.findIndex(g => g.hash === parsed[0].hash));
+    return;
+  }
   $('game-list-wrap').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -328,6 +342,14 @@ function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 /* ═══════════════ review session ═══════════════ */
 async function openGame(i) {
+  if (!settings.username.trim()) {
+    openSettings();
+    const hint = $('username-hint');
+    hint.textContent = 'Set your username first — this tells the coach which side is you.';
+    hint.classList.add('hint-warn');
+    $('set-username').focus();
+    return;
+  }
   const g = games[i];
   showScreen('review');
   const h = g.headers;
@@ -682,6 +704,9 @@ function showScreen(name) {
 }
 function openSettings() {
   $('set-username').value = settings.username;
+  const hint = $('username-hint');
+  hint.textContent = 'Used to mark your side, flip the board, and tag wins and losses.';
+  hint.classList.remove('hint-warn');
   $('set-depth').value = String(settings.depth);
   populateVoiceOptions();
   $('set-voice').value = settings.voiceURI || '';
@@ -770,8 +795,23 @@ function wire() {
 }
 try {
   wire();
+  renderLibrary();
+  checkSharedPgn();
 } catch (err) {
   const msg = 'Review Room failed to start: ' + err.message + '.\nOpen the browser console for details.';
   console.error('[Review Room] ' + msg, err);
   window.__rrBootError?.(msg);
+}
+
+/* ═══════════════ share target (PWA) ═══════════════ */
+async function checkSharedPgn() {
+  if (!('caches' in window)) return;
+  try {
+    const cache = await caches.open('review-room-share-inbox');
+    const res = await cache.match('./__shared-pgn__');
+    if (!res) return;
+    await cache.delete('./__shared-pgn__');
+    const text = await res.text();
+    if (text.trim()) loadPgnText(text);
+  } catch (e) { console.warn('No shared PGN to import:', e.message); }
 }
