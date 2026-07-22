@@ -5,6 +5,7 @@ const DEFAULTS = {
   username: '', depth: 12,
   provider: 'anthropic', model: 'claude-sonnet-4-6', baseurl: '',
   keys: {}, voiceURI: '',
+  showCoach: true, showSummary: true, showMoves: true,
 };
 const MODEL_DEFAULTS = {
   anthropic: 'claude-sonnet-4-6', openai: 'gpt-4o-mini',
@@ -352,6 +353,7 @@ async function openGame(i) {
   }
   const g = games[i];
   showScreen('review');
+  applyPanelVisibility();
   const h = g.headers;
   $('rev-players').textContent = `${h.White} (${h.WhiteElo || '?'}) vs ${h.Black} (${h.BlackElo || '?'})`;
   $('rev-sub').textContent = [h.Date, h.Result, h.Termination].filter(Boolean).join(' · ');
@@ -401,7 +403,7 @@ function renderSummary() {
   }
   rows += '</div>';
   $('summary-body').innerHTML = rows;
-  $('summary-card').hidden = false;
+  $('summary-card').hidden = !settings.showSummary;
 }
 
 function renderMoveList() {
@@ -724,6 +726,14 @@ function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $('screen-' + name).classList.add('active');
 }
+function applyPanelVisibility() {
+  $('chk-show-coach').checked = settings.showCoach;
+  $('chk-show-summary').checked = settings.showSummary;
+  $('chk-show-moves').checked = settings.showMoves;
+  $('coach-card').hidden = !settings.showCoach;
+  $('summary-card').hidden = !settings.showSummary;
+  $('move-list').hidden = !settings.showMoves;
+}
 function openSettings() {
   $('set-username').value = settings.username;
   const hint = $('username-hint');
@@ -780,6 +790,18 @@ function wire() {
   $('nav-end').addEventListener('click', (e) => { e.currentTarget.blur(); goTo(cur.fens.length - 1); });
   $('chk-retry').addEventListener('change', (e) => { if (cur) cur.retry = e.target.checked; });
   $('chk-arrow').addEventListener('change', () => cur && renderArrow());
+  $('chk-show-coach').addEventListener('change', (e) => {
+    settings.showCoach = e.target.checked; saveSettings();
+    $('coach-card').hidden = !settings.showCoach;
+  });
+  $('chk-show-summary').addEventListener('change', (e) => {
+    settings.showSummary = e.target.checked; saveSettings();
+    $('summary-card').hidden = !settings.showSummary;
+  });
+  $('chk-show-moves').addEventListener('change', (e) => {
+    settings.showMoves = e.target.checked; saveSettings();
+    $('move-list').hidden = !settings.showMoves;
+  });
   $('btn-speak').addEventListener('click', () => {
     if ('speechSynthesis' in window && speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
     speak($('coach-text').textContent);
