@@ -2,6 +2,11 @@
 
 A self-hosted, install-anywhere game review tool. Upload your chess.com PGN export (one game or fifty), pick a game, and step through every move with engine verdicts, best-move arrows, an eval bar, coach commentary, and a "guess the move" training mode. No daily limit, no account, everything runs on your device.
 
+<p align="center">
+  <img src="screenshots/desktop.png" alt="Review Room desktop view — board, eval bar, coach commentary, and move list" width="700"><br>
+  <img src="screenshots/mobile.png" alt="Review Room mobile view — coach tips and best-move arrow" width="260">
+</p>
+
 ## What's inside
 
 - **Engine**: Stockfish (WebAssembly) bundled locally — analyzes in your browser, works offline.
