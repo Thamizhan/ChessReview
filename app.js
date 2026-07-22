@@ -557,11 +557,24 @@ function renderCoach() {
 }
 
 /* ═══════════════ navigation & retry ═══════════════ */
+// Re-rendering the board/coach card can shift page height (or trip a
+// browser's own "scroll focused element into view" behavior), which
+// visibly yanks the viewport on mobile. Pin scroll position across the
+// update — restored both synchronously and after paint, since some
+// mobile browsers apply their scroll adjustment a frame late.
+function preservingScroll(fn) {
+  const y = window.scrollY;
+  fn();
+  window.scrollTo(0, y);
+  requestAnimationFrame(() => window.scrollTo(0, y));
+}
 function goTo(ply) {
-  cur.ply = Math.max(0, Math.min(cur.fens.length - 1, ply));
-  cur.retryArmed = false; cur.sel = null;
-  $('retry-banner').hidden = true;
-  renderBoard(); renderCoach(); highlightMoveList();
+  preservingScroll(() => {
+    cur.ply = Math.max(0, Math.min(cur.fens.length - 1, ply));
+    cur.retryArmed = false; cur.sel = null;
+    $('retry-banner').hidden = true;
+    renderBoard(); renderCoach(); highlightMoveList();
+  });
 }
 function highlightMoveList() {
   document.querySelectorAll('.mv.current').forEach(e => e.classList.remove('current'));
@@ -582,9 +595,11 @@ function next() {
   const bad = ['inaccuracy', 'mistake', 'blunder', 'miss'].includes(cur.cls[i].verdict);
   const yours = youSide(cur.g) === mv.color;
   if (cur.retry && yours && bad && !cur.retryArmed && !cur._retryDone?.has(i)) {
-    cur.retryArmed = true;
-    $('retry-banner').hidden = false;
-    renderBoard(); renderCoach();
+    preservingScroll(() => {
+      cur.retryArmed = true;
+      $('retry-banner').hidden = false;
+      renderBoard(); renderCoach();
+    });
     return;
   }
   cur.retryArmed = false; $('retry-banner').hidden = true;
