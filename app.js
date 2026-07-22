@@ -417,7 +417,7 @@ function renderMoveList() {
         const v = cls[j].verdict;
         b.className = 'mv'; b.dataset.ply = j + 1;
         b.innerHTML = `<span class="tag" style="background:${VERDICTS[v].color}">${VERDICTS[v].glyph}</span>${esc(g.moves[j].san)}`;
-        b.addEventListener('click', () => goTo(j + 1));
+        b.addEventListener('click', (e) => { e.currentTarget.blur(); goTo(j + 1); });
       } else b.className = 'mv empty';
       el.appendChild(b);
     }
@@ -566,7 +566,14 @@ function goTo(ply) {
 function highlightMoveList() {
   document.querySelectorAll('.mv.current').forEach(e => e.classList.remove('current'));
   const el = document.querySelector(`.mv[data-ply="${cur.ply}"]`);
-  if (el) { el.classList.add('current'); el.scrollIntoView({ block: 'nearest' }); }
+  if (!el) return;
+  el.classList.add('current');
+  // Scroll only inside the move-list's own box — never the page — so
+  // stepping through moves can't yank the viewport around on mobile.
+  const list = $('move-list');
+  const elTop = el.offsetTop, elBottom = elTop + el.offsetHeight;
+  if (elTop < list.scrollTop) list.scrollTop = elTop;
+  else if (elBottom > list.scrollTop + list.clientHeight) list.scrollTop = elBottom - list.clientHeight;
 }
 function next() {
   if (cur.ply >= cur.fens.length - 1) return;
@@ -743,10 +750,19 @@ function wire() {
 
   $('btn-back').addEventListener('click', () => { if ('speechSynthesis' in window) speechSynthesis.cancel(); showScreen('library'); });
   $('btn-flip').addEventListener('click', () => { if (cur) { cur.orient = cur.orient === 'w' ? 'b' : 'w'; renderBoard(); renderPlayers(); } });
-  $('nav-start').addEventListener('click', () => goTo(0));
-  $('nav-prev').addEventListener('click', () => goTo(cur.ply - 1));
-  $('nav-next').addEventListener('click', next);
-  $('nav-end').addEventListener('click', () => goTo(cur.fens.length - 1));
+  // Buttons get focused (and scrolled into view by the browser) on mousedown,
+  // before the click event even fires — preventing default there is what
+  // actually stops the page from jumping when stepping through moves.
+  document.querySelector('.nav-bar').addEventListener('mousedown', (e) => {
+    if (e.target.closest('button')) e.preventDefault();
+  });
+  $('move-list').addEventListener('mousedown', (e) => {
+    if (e.target.closest('button')) e.preventDefault();
+  });
+  $('nav-start').addEventListener('click', (e) => { e.currentTarget.blur(); goTo(0); });
+  $('nav-prev').addEventListener('click', (e) => { e.currentTarget.blur(); goTo(cur.ply - 1); });
+  $('nav-next').addEventListener('click', (e) => { e.currentTarget.blur(); next(); });
+  $('nav-end').addEventListener('click', (e) => { e.currentTarget.blur(); goTo(cur.fens.length - 1); });
   $('chk-retry').addEventListener('change', (e) => { if (cur) cur.retry = e.target.checked; });
   $('chk-arrow').addEventListener('change', () => cur && renderArrow());
   $('btn-speak').addEventListener('click', () => {

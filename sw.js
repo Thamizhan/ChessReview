@@ -1,4 +1,4 @@
-const CACHE = 'review-room-v9';
+const CACHE = 'review-room-v11';
 const SHARE_CACHE = 'review-room-share-inbox';
 const SHARE_KEY = './__shared-pgn__';
 const ASSETS = [
